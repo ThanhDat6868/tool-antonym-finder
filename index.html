@@ -1,0 +1,719 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antonym Finder - Tìm từ trái nghĩa</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{font-family:Arial,sans-serif}
+.panel{background:white;border:1px solid #e2e8f0;border-radius:14px}
+.btn{padding:10px 16px;border-radius:9px;font-weight:600}
+.chip{padding:8px 13px;border-radius:20px;background:#f1f5f9;cursor:pointer}
+.chip:hover{background:#dbeafe}
+.word-card{border:1px solid #e2e8f0;border-radius:12px;padding:16px}
+.word-card:hover{border-color:#818cf8;background:#fafaff}
+.filter.active{background:#4f46e5;color:white}
+</style>
+</head>
+
+<body class="bg-slate-50 text-slate-800">
+
+<header class="bg-gradient-to-r from-indigo-700 to-purple-700 text-white">
+ <div class="max-w-5xl mx-auto px-4 py-8">
+  <div class="flex items-center gap-3">
+   <div class="text-3xl">📚</div>
+   <div>
+    <h1 class="text-3xl font-bold">Antonym Finder</h1>
+    <p class="text-indigo-100 mt-1">Tìm từ trái nghĩa và từ đối lập trong tiếng Anh</p>
+   </div>
+  </div>
+  <p class="text-indigo-100 mt-5 max-w-2xl">
+   Khám phá từ trái nghĩa, phân loại từ và học cách sử dụng từ trong câu.
+  </p>
+ </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 py-8">
+
+ <section class="panel p-5 md:p-7">
+  <h2 class="text-xl font-bold mb-2">Tìm từ trái nghĩa</h2>
+  <p class="text-sm text-slate-500 mb-5">
+   Nhập một từ tiếng Anh để tìm những từ có nghĩa đối lập.
+  </p>
+
+  <div class="flex flex-col sm:flex-row gap-2">
+   <input id="wordInput" type="text"
+    class="flex-1 border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
+    placeholder="Ví dụ: happy, hot, good, strong...">
+   <button id="findBtn" class="btn bg-indigo-600 hover:bg-indigo-700 text-white">
+    🔍 Find Antonyms
+   </button>
+  </div>
+
+  <div class="mt-4">
+   <p class="text-sm font-semibold mb-2">Từ gợi ý:</p>
+   <div class="flex flex-wrap gap-2">
+    <button class="chip sample" data-word="happy">Happy</button>
+    <button class="chip sample" data-word="good">Good</button>
+    <button class="chip sample" data-word="hot">Hot</button>
+    <button class="chip sample" data-word="strong">Strong</button>
+    <button class="chip sample" data-word="increase">Increase</button>
+    <button class="chip sample" data-word="success">Success</button>
+   </div>
+  </div>
+
+  <div class="border-t mt-6 pt-5">
+   <p class="font-semibold text-sm mb-3">Lọc theo loại từ</p>
+   <div class="flex flex-wrap gap-2" id="filters">
+    <button class="filter chip active" data-filter="all">All</button>
+    <button class="filter chip" data-filter="adjective">Adjective</button>
+    <button class="filter chip" data-filter="noun">Noun</button>
+    <button class="filter chip" data-filter="verb">Verb</button>
+    <button class="filter chip" data-filter="adverb">Adverb</button>
+   </div>
+  </div>
+ </section>
+
+ <section id="resultSection" class="hidden mt-6">
+  <div class="panel p-5 mb-5">
+   <div class="flex flex-wrap justify-between gap-3 items-start">
+    <div>
+     <p class="text-sm text-slate-500">Từ bạn đang tìm</p>
+     <h2 id="searchedWord" class="text-3xl font-bold text-indigo-700 mt-1"></h2>
+     <p id="wordMeaning" class="text-slate-600 mt-2"></p>
+    </div>
+    <span id="resultCount" class="bg-indigo-100 text-indigo-700 px-3 py-2 rounded-full text-sm font-semibold"></span>
+   </div>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-5">
+   <div class="panel p-5">
+    <div class="flex items-center justify-between mb-4">
+     <h3 class="font-bold text-lg">Direct Antonyms</h3>
+     <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">Trực tiếp</span>
+    </div>
+    <p class="text-sm text-slate-500 mb-4">
+     Các từ có nghĩa đối lập rõ ràng và thường được dùng thành cặp.
+    </p>
+    <div id="directResults" class="space-y-3"></div>
+   </div>
+
+   <div class="panel p-5">
+    <div class="flex items-center justify-between mb-4">
+     <h3 class="font-bold text-lg">Indirect Antonyms</h3>
+     <span class="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full">Gián tiếp</span>
+    </div>
+    <p class="text-sm text-slate-500 mb-4">
+     Các từ đối lập theo một sắc thái hoặc ngữ cảnh nhất định.
+    </p>
+    <div id="indirectResults" class="space-y-3"></div>
+   </div>
+  </div>
+
+  <div class="panel p-5 mt-5">
+   <h3 class="font-bold mb-3">Related Words - Từ liên quan</h3>
+   <div id="relatedResults" class="flex flex-wrap gap-2"></div>
+  </div>
+ </section>
+
+ <section id="emptyState" class="panel p-8 text-center mt-6">
+  <div class="text-5xl mb-3">🔤</div>
+  <h3 class="font-bold text-lg">Bạn muốn tìm từ trái nghĩa nào?</h3>
+  <p class="text-sm text-slate-500 mt-2">Nhập từ tiếng Anh vào ô tìm kiếm để bắt đầu.</p>
+ </section>
+
+ <section class="panel p-5 mt-6">
+  <h2 class="font-bold text-lg mb-3">Direct và Indirect Antonyms là gì?</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+   <div class="bg-green-50 rounded-lg p-4">
+    <h3 class="font-bold text-green-800">Direct Antonyms</h3>
+    <p class="text-sm text-green-900 mt-2">Từ trái nghĩa trực tiếp, thường tạo thành cặp đối lập rõ ràng.</p>
+    <p class="text-sm mt-2">Ví dụ: Hot ↔ Cold, Happy ↔ Sad.</p>
+   </div>
+   <div class="bg-amber-50 rounded-lg p-4">
+    <h3 class="font-bold text-amber-800">Indirect Antonyms</h3>
+    <p class="text-sm text-amber-900 mt-2">Từ đối lập theo sắc thái hoặc một ngữ cảnh cụ thể.</p>
+    <p class="text-sm mt-2">Ví dụ: Hot ↔ Freezing, Bright ↔ Dim.</p>
+   </div>
+  </div>
+ </section>
+
+ <section class="panel p-5 mt-6">
+  <h2 class="font-bold text-lg mb-3">Hướng dẫn sử dụng</h2>
+  <ol class="list-decimal pl-5 space-y-2 text-sm text-slate-600">
+   <li>Nhập một từ tiếng Anh vào ô tìm kiếm.</li>
+   <li>Nhấn Find Antonyms để tìm từ trái nghĩa.</li>
+   <li>Chọn loại từ để lọc kết quả.</li>
+   <li>Nhấn vào từ trái nghĩa để sao chép.</li>
+   <li>Xem giải thích và ví dụ để chọn từ phù hợp với ngữ cảnh.</li>
+  </ol>
+  <p class="mt-4 text-xs bg-amber-50 text-amber-800 p-3 rounded-lg">
+   Lưu ý: Từ điển tích hợp có phạm vi giới hạn. Một từ có thể có nhiều nghĩa và nhiều từ trái nghĩa khác nhau tùy ngữ cảnh.
+  </p>
+ </section>
+
+ <footer class="text-center text-sm text-slate-500 py-8">
+  Antonym Finder © 2026 - Free English Vocabulary Tool
+ </footer>
+</main>
+
+<script>
+const dictionary = {
+ happy:{
+  vi:"Vui vẻ, hạnh phúc",
+  pos:"adjective",
+  direct:[
+   ["sad","Buồn","She feels sad today."],
+   ["unhappy","Không hạnh phúc","He was unhappy with the result."],
+   ["miserable","Khổ sở, đau khổ","They felt miserable."],
+   ["depressed","Chán nản","She looked depressed."]
+  ],
+  indirect:[
+   ["gloomy","U ám, buồn bã","The weather made him gloomy."],
+   ["upset","Buồn bực","He was upset about the news."]
+  ],
+  related:["joyful","cheerful","delighted"]
+ },
+ sad:{
+  vi:"Buồn, không vui",
+  pos:"adjective",
+  direct:[
+   ["happy","Hạnh phúc","She is happy today."],
+   ["cheerful","Vui vẻ","He looks cheerful."],
+   ["joyful","Tràn đầy niềm vui","It was a joyful day."]
+  ],
+  indirect:[["hopeful","Đầy hy vọng","She remained hopeful."]],
+  related:["unhappy","miserable","gloomy"]
+ },
+ hot:{
+  vi:"Nóng",
+  pos:"adjective",
+  direct:[
+   ["cold","Lạnh","The water is cold."],
+   ["cool","Mát","The room feels cool."]
+  ],
+  indirect:[
+   ["freezing","Lạnh cóng","It is freezing outside."],
+   ["chilly","Se lạnh","The morning is chilly."]
+  ],
+  related:["warm","boiling","heated"]
+ },
+ cold:{
+  vi:"Lạnh",
+  pos:"adjective",
+  direct:[
+   ["hot","Nóng","The coffee is hot."],
+   ["warm","Ấm","The weather is warm."]
+  ],
+  indirect:[["boiling","Nóng sôi","The water is boiling."]],
+  related:["cool","freezing","chilly"]
+ },
+ good:{
+  vi:"Tốt, giỏi",
+  pos:"adjective",
+  direct:[
+   ["bad","Xấu, tệ","This is a bad idea."],
+   ["poor","Kém","The result was poor."],
+   ["terrible","Kinh khủng","The service was terrible."]
+  ],
+  indirect:[["inferior","Thấp kém","This product is inferior."]],
+  related:["excellent","great","wonderful"]
+ },
+ bad:{
+  vi:"Xấu, tệ",
+  pos:"adjective",
+  direct:[
+   ["good","Tốt","It was a good experience."],
+   ["excellent","Xuất sắc","She did an excellent job."],
+   ["great","Tuyệt vời","That is a great idea."]
+  ],
+  indirect:[["positive","Tích cực","We need a positive result."]],
+  related:["poor","terrible","awful"]
+ },
+ big:{
+  vi:"To, lớn",
+  pos:"adjective",
+  direct:[
+   ["small","Nhỏ","This is a small room."],
+   ["little","Bé","She has a little dog."],
+   ["tiny","Rất nhỏ","The insect is tiny."]
+  ],
+  indirect:[["miniature","Thu nhỏ","It is a miniature model."]],
+  related:["huge","large","massive"]
+ },
+ small:{
+  vi:"Nhỏ",
+  pos:"adjective",
+  direct:[
+   ["big","To","They live in a big house."],
+   ["large","Lớn","It is a large building."],
+   ["huge","Khổng lồ","That is a huge box."]
+  ],
+  indirect:[["massive","Đồ sộ","A massive structure."]],
+  related:["tiny","little","miniature"]
+ },
+ strong:{
+  vi:"Mạnh, khỏe",
+  pos:"adjective",
+  direct:[
+   ["weak","Yếu","He feels weak today."],
+   ["fragile","Mong manh","The glass is fragile."]
+  ],
+  indirect:[
+   ["feeble","Yếu ớt","His voice sounded feeble."],
+   ["powerless","Bất lực","They felt powerless."]
+  ],
+  related:["powerful","tough","sturdy"]
+ },
+ weak:{
+  vi:"Yếu",
+  pos:"adjective",
+  direct:[
+   ["strong","Mạnh","She is strong."],
+   ["powerful","Có sức mạnh","He is powerful."]
+  ],
+  indirect:[["sturdy","Chắc chắn, khỏe","The table is sturdy."]],
+  related:["fragile","feeble","frail"]
+ },
+ fast:{
+  vi:"Nhanh",
+  pos:"adjective",
+  direct:[
+   ["slow","Chậm","The car is slow."],
+   ["sluggish","Chậm chạp","The computer is sluggish."]
+  ],
+  indirect:[["leisurely","Thong thả","They took a leisurely walk."]],
+  related:["quick","rapid","swift"]
+ },
+ slow:{
+  vi:"Chậm",
+  pos:"adjective",
+  direct:[
+   ["fast","Nhanh","He runs fast."],
+   ["quick","Nhanh chóng","She made a quick decision."]
+  ],
+  indirect:[["rapid","Mau lẹ","The rapid growth surprised us."]],
+  related:["sluggish","gradual","leisurely"]
+ },
+ easy:{
+  vi:"Dễ dàng",
+  pos:"adjective",
+  direct:[
+   ["difficult","Khó","This test is difficult."],
+   ["hard","Khó","The question is hard."]
+  ],
+  indirect:[["challenging","Đầy thử thách","It is a challenging task."]],
+  related:["simple","effortless","straightforward"]
+ },
+ difficult:{
+  vi:"Khó khăn",
+  pos:"adjective",
+  direct:[
+   ["easy","Dễ dàng","The lesson is easy."],
+   ["simple","Đơn giản","It is a simple task."]
+  ],
+  indirect:[["effortless","Không tốn công","The process was effortless."]],
+  related:["hard","challenging","complicated"]
+ },
+ rich:{
+  vi:"Giàu có",
+  pos:"adjective",
+  direct:[
+   ["poor","Nghèo","The family was poor."],
+   ["impoverished","Nghèo khó","The region was impoverished."]
+  ],
+  indirect:[["needy","Thiếu thốn","They help needy families."]],
+  related:["wealthy","affluent","prosperous"]
+ },
+ poor:{
+  vi:"Nghèo, kém",
+  pos:"adjective",
+  direct:[
+   ["rich","Giàu","He became rich."],
+   ["wealthy","Giàu có","A wealthy businessman."]
+  ],
+  indirect:[["affluent","Sung túc","They live in an affluent area."]],
+  related:["impoverished","needy","broke"]
+ },
+ beautiful:{
+  vi:"Đẹp",
+  pos:"adjective",
+  direct:[
+   ["ugly","Xấu","The building looks ugly."],
+   ["unattractive","Không hấp dẫn","The design is unattractive."]
+  ],
+  indirect:[["plain","Bình thường, không nổi bật","She prefers plain clothes."]],
+  related:["pretty","gorgeous","lovely"]
+ },
+ clean:{
+  vi:"Sạch",
+  pos:"adjective",
+  direct:[
+   ["dirty","Bẩn","The floor is dirty."],
+   ["filthy","Rất bẩn","His shoes are filthy."]
+  ],
+  indirect:[["messy","Lộn xộn","The room is messy."]],
+  related:["tidy","neat","spotless"]
+ },
+ dirty:{
+  vi:"Bẩn",
+  pos:"adjective",
+  direct:[
+   ["clean","Sạch","Keep your hands clean."],
+   ["spotless","Không có vết bẩn","The kitchen is spotless."]
+  ],
+  indirect:[["neat","Gọn gàng","Her desk is neat."]],
+  related:["filthy","messy","muddy"]
+ },
+ bright:{
+  vi:"Sáng, thông minh",
+  pos:"adjective",
+  direct:[
+   ["dark","Tối","The room is dark."],
+   ["dim","Mờ","The light is dim."]
+  ],
+  indirect:[["dull","Mờ nhạt","The colors look dull."]],
+  related:["shiny","brilliant","radiant"]
+ },
+ dark:{
+  vi:"Tối, tối tăm",
+  pos:"adjective",
+  direct:[
+   ["bright","Sáng","The room is bright."],
+   ["light","Có ánh sáng","The sky is light."]
+  ],
+  indirect:[["radiant","Rạng rỡ","Her smile was radiant."]],
+  related:["dim","gloomy","shadowy"]
+ },
+ open:{
+  vi:"Mở",
+  pos:"adjective",
+  direct:[
+   ["closed","Đóng","The shop is closed."],
+   ["shut","Đóng lại","Keep the door shut."]
+  ],
+  indirect:[["sealed","Được niêm phong","The box is sealed."]],
+  related:["available","accessible","unlocked"]
+ },
+ closed:{
+  vi:"Đóng",
+  pos:"adjective",
+  direct:[
+   ["open","Mở","The door is open."],
+   ["unlocked","Không khóa","The gate is unlocked."]
+  ],
+  indirect:[["available","Có sẵn","The service is available."]],
+  related:["shut","sealed","locked"]
+ },
+ increase:{
+  vi:"Tăng lên",
+  pos:"verb",
+  direct:[
+   ["decrease","Giảm xuống","Prices decrease every year."],
+   ["reduce","Cắt giảm","We need to reduce costs."],
+   ["lower","Hạ thấp","They lowered the price."]
+  ],
+  indirect:[["diminish","Suy giảm","His influence diminished."]],
+  related:["grow","rise","expand"]
+ },
+ decrease:{
+  vi:"Giảm xuống",
+  pos:"verb",
+  direct:[
+   ["increase","Tăng lên","Sales increase in summer."],
+   ["raise","Nâng lên","They raised the price."],
+   ["expand","Mở rộng","The company expanded."]
+  ],
+  indirect:[["grow","Phát triển, tăng lên","The business grew quickly."]],
+  related:["reduce","decline","diminish"]
+ },
+ accept:{
+  vi:"Chấp nhận",
+  pos:"verb",
+  direct:[
+   ["reject","Từ chối","They rejected the offer."],
+   ["refuse","Khước từ","She refused to answer."]
+  ],
+  indirect:[["deny","Phủ nhận","He denied the claim."]],
+  related:["approve","agree","receive"]
+ },
+ reject:{
+  vi:"Từ chối",
+  pos:"verb",
+  direct:[
+   ["accept","Chấp nhận","I accept your invitation."],
+   ["approve","Đồng ý","The manager approved it."]
+  ],
+  indirect:[["welcome","Chào đón","They welcomed the idea."]],
+  related:["refuse","decline","deny"]
+ },
+ success:{
+  vi:"Thành công",
+  pos:"noun",
+  direct:[
+   ["failure","Thất bại","The project was a failure."],
+   ["defeat","Sự thất bại","They accepted defeat."]
+  ],
+  indirect:[["setback","Trở ngại","It was a temporary setback."]],
+  related:["achievement","victory","accomplishment"]
+ },
+ failure:{
+  vi:"Thất bại",
+  pos:"noun",
+  direct:[
+   ["success","Thành công","Hard work brings success."],
+   ["victory","Chiến thắng","The team celebrated victory."]
+  ],
+  indirect:[["achievement","Thành tựu","It was a great achievement."]],
+  related:["defeat","loss","setback"]
+ },
+ love:{
+  vi:"Tình yêu",
+  pos:"noun",
+  direct:[
+   ["hate","Sự căm ghét","Hate creates conflict."],
+   ["hatred","Lòng thù hận","Hatred hurts everyone."]
+  ],
+  indirect:[["dislike","Sự không thích","She expressed her dislike."]],
+  related:["affection","care","passion"]
+ },
+ hate:{
+  vi:"Ghét",
+  pos:"verb",
+  direct:[
+   ["love","Yêu","I love this place."],
+   ["adore","Yêu quý","They adore their children."]
+  ],
+  indirect:[["like","Thích","I like this song."]],
+  related:["dislike","detest","despise"]
+ },
+ early:{
+  vi:"Sớm",
+  pos:"adverb",
+  direct:[
+   ["late","Muộn","He arrived late."],
+   ["belatedly","Trễ","She responded belatedly."]
+  ],
+  indirect:[["delayed","Bị trì hoãn","The flight was delayed."]],
+  related:["soon","prematurely","ahead"]
+ },
+ late:{
+  vi:"Muộn",
+  pos:"adverb",
+  direct:[
+   ["early","Sớm","We arrived early."],
+   ["promptly","Đúng giờ","She replied promptly."]
+  ],
+  indirect:[["ahead of time","Trước thời hạn","They finished ahead of time."]],
+  related:["delayed","overdue","belated"]
+ },
+ always:{
+  vi:"Luôn luôn",
+  pos:"adverb",
+  direct:[
+   ["never","Không bao giờ","He never gives up."],
+   ["rarely","Hiếm khi","She rarely complains."]
+  ],
+  indirect:[["sometimes","Đôi khi","Sometimes I walk to work."]],
+  related:["usually","often","frequently"]
+ },
+ never:{
+  vi:"Không bao giờ",
+  pos:"adverb",
+  direct:[
+   ["always","Luôn luôn","She always smiles."],
+   ["often","Thường xuyên","He often visits us."]
+  ],
+  indirect:[["sometimes","Thỉnh thoảng","I sometimes read books."]],
+  related:["rarely","seldom","occasionally"]
+ },
+ carefully:{
+  vi:"Một cách cẩn thận",
+  pos:"adverb",
+  direct:[
+   ["carelessly","Bất cẩn","He drove carelessly."],
+   ["recklessly","Liều lĩnh","She acted recklessly."]
+  ],
+  indirect:[["hastily","Vội vàng","He answered hastily."]],
+  related:["cautiously","attentively","precisely"]
+ },
+ carefully:{
+  vi:"Một cách cẩn thận",
+  pos:"adverb",
+  direct:[
+   ["carelessly","Bất cẩn","He drove carelessly."],
+   ["recklessly","Liều lĩnh","She acted recklessly."]
+  ],
+  indirect:[["hastily","Vội vàng","He answered hastily."]],
+  related:["cautiously","attentively","precisely"]
+ }
+};
+
+const translations = {
+ sad:"Buồn", unhappy:"Không hạnh phúc", miserable:"Khổ sở",
+ depressed:"Chán nản", gloomy:"U ám", upset:"Buồn bực",
+ cold:"Lạnh", cool:"Mát", freezing:"Lạnh cóng", chilly:"Se lạnh",
+ bad:"Tệ", poor:"Kém", terrible:"Kinh khủng",
+ small:"Nhỏ", little:"Bé", tiny:"Rất nhỏ",
+ weak:"Yếu", fragile:"Mong manh", feeble:"Yếu ớt",
+ slow:"Chậm", sluggish:"Chậm chạp", difficult:"Khó khăn",
+ hard:"Khó", challenging:"Đầy thử thách",
+ dark:"Tối", dim:"Mờ", dull:"Mờ nhạt",
+ dirty:"Bẩn", filthy:"Rất bẩn", messy:"Lộn xộn",
+ rich:"Giàu", wealthy:"Giàu có", decrease:"Giảm",
+ reduce:"Cắt giảm", lower:"Hạ thấp", reject:"Từ chối",
+ refuse:"Khước từ", failure:"Thất bại", defeat:"Thua cuộc",
+ hate:"Ghét", love:"Yêu", late:"Muộn", early:"Sớm",
+ never:"Không bao giờ", always:"Luôn luôn",
+ carelessly:"Bất cẩn", recklessly:"Liều lĩnh"
+};
+
+let currentWord="";
+let currentFilter="all";
+
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#039;"
+ }[c]));
+}
+
+function showEmpty(message){
+ $("resultSection").classList.add("hidden");
+ $("emptyState").classList.remove("hidden");
+ $("emptyState").querySelector("p").textContent=message;
+}
+
+function renderGroup(id,items){
+ const box=$(id);
+
+ const filtered=items.filter(item=>{
+  return currentFilter==="all" || item.pos===currentFilter;
+ });
+
+ if(!filtered.length){
+  box.innerHTML='<p class="text-sm text-slate-400">Không có kết quả thuộc loại từ này.</p>';
+  return;
+ }
+
+ box.innerHTML=filtered.map(item=>`
+  <div class="word-card">
+   <div class="flex justify-between items-center gap-2">
+    <button class="font-bold text-lg text-indigo-700 hover:underline"
+     data-copy="${escapeHTML(item.word)}">${escapeHTML(item.word)}</button>
+    <button class="text-xs bg-slate-100 px-2 py-1 rounded"
+     data-copy="${escapeHTML(item.word)}">Copy</button>
+   </div>
+   <p class="text-sm text-slate-600 mt-1">${escapeHTML(item.meaning)}</p>
+   <span class="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded mt-2">${escapeHTML(item.pos)}</span>
+   <p class="text-sm mt-3 text-slate-500 italic">${escapeHTML(item.example)}</p>
+  </div>
+ `).join("");
+}
+
+function makeItems(list,pos){
+ return list.map(item=>({
+  word:item[0],
+  meaning:item[1],
+  example:item[2],
+  pos
+ }));
+}
+
+function searchWord(word){
+ const key=word.trim().toLowerCase();
+ if(!key){
+  showEmpty("Vui lòng nhập từ tiếng Anh cần tìm.");
+  return;
+ }
+
+ const entry=dictionary[key];
+ if(!entry){
+  currentWord=key;
+  $("emptyState").classList.remove("hidden");
+  $("resultSection").classList.add("hidden");
+  $("emptyState").querySelector("h3").textContent="Chưa tìm thấy từ này";
+  $("emptyState").querySelector("p").textContent=
+   "Từ điển hiện chưa có dữ liệu cho '"+key+"'. Hãy thử happy, hot, good, strong, increase hoặc success.";
+  return;
+ }
+
+ currentWord=key;
+ currentFilter="all";
+ document.querySelectorAll(".filter").forEach(btn=>{
+  btn.classList.toggle("active",btn.dataset.filter==="all");
+ });
+
+ $("emptyState").classList.add("hidden");
+ $("resultSection").classList.remove("hidden");
+ $("searchedWord").textContent=key;
+ $("wordMeaning").textContent=entry.vi+" · "+entry.pos;
+ $("resultCount").textContent=
+  (entry.direct.length+entry.indirect.length)+" kết quả";
+
+ renderGroup("directResults",makeItems(entry.direct,entry.pos));
+ renderGroup("indirectResults",makeItems(entry.indirect,entry.pos));
+
+ $("relatedResults").innerHTML=entry.related.map(word=>`
+  <button class="chip related" data-word="${escapeHTML(word)}">${escapeHTML(word)}</button>
+ `).join("");
+
+ window.scrollTo({top:$("resultSection").offsetTop-30,behavior:"smooth"});
+}
+
+function applyFilter(filter){
+ currentFilter=filter;
+ document.querySelectorAll(".filter").forEach(btn=>{
+  btn.classList.toggle("active",btn.dataset.filter===filter);
+ });
+
+ if(!currentWord || !dictionary[currentWord])return;
+
+ const entry=dictionary[currentWord];
+ renderGroup("directResults",makeItems(entry.direct,entry.pos));
+ renderGroup("indirectResults",makeItems(entry.indirect,entry.pos));
+}
+
+$("findBtn").addEventListener("click",()=>{
+ searchWord($("wordInput").value);
+});
+
+$("wordInput").addEventListener("keydown",event=>{
+ if(event.key==="Enter")searchWord($("wordInput").value);
+});
+
+document.querySelectorAll(".sample").forEach(btn=>{
+ btn.addEventListener("click",()=>{
+  $("wordInput").value=btn.dataset.word;
+  searchWord(btn.dataset.word);
+ });
+});
+
+document.querySelectorAll(".filter").forEach(btn=>{
+ btn.addEventListener("click",()=>applyFilter(btn.dataset.filter));
+});
+
+document.addEventListener("click",async event=>{
+ const copy=event.target.closest("[data-copy]");
+ if(copy){
+  try{
+   await navigator.clipboard.writeText(copy.dataset.copy);
+   copy.textContent="Đã copy!";
+   setTimeout(()=>copy.textContent=copy.dataset.copy,1000);
+  }catch{
+   alert("Không thể sao chép. Hãy chọn và copy từ thủ công.");
+  }
+ }
+
+ const related=event.target.closest("[data-word]");
+ if(related && !related.classList.contains("sample")){
+  $("wordInput").value=related.dataset.word;
+  searchWord(related.dataset.word);
+ }
+});
+
+</script>
+</body>
+</html>
